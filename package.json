@@ -1,0 +1,25 @@
+{
+  "name": "dataready-platform",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "DataReady — browser-based transaction data validation, cleaning and chunking, plus a live SQL workbench for the customer dataset.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.456.0",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.4",
+    "sql.js": "^1.12.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.19"
+  }
+}
