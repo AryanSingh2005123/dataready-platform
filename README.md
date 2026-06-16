@@ -6,9 +6,14 @@ A single web app that covers the whole **Xeno Implementation Internship** brief:
   phone numbers against **configurable, country-code-driven rules** (Singapore 8
   digits, India 10 digits, …), check dates against **configurable accepted
   formats**, run **integrity checks** (required fields, numeric amounts, email
-  format, allowed payment modes, duplicate order IDs) → download a **cleaned
-  CSV** and an **errors report**, and **auto-split large files into chunks**
-  bundled as one `.zip`.
+  format, allowed payment modes, duplicate order IDs) → see results as **charts**
+  (pass-rate donut + issue breakdown) and a highlighted table → download a
+  **cleaned CSV** and an **errors report**, and **auto-split large files into
+  chunks** bundled as one `.zip`. A ready-made
+  [`sample-transactions.csv`](public/sample-transactions.csv) (30 rows exercising
+  every rule) loads via **Sample**; a **5k stress** button generates 5,000 rows.
+  The results table renders at most 100 rows at a time (opt into "show all"), so
+  large files stay responsive.
 - **SQL Workbench (Parts 1–3):** a sample `customers` table (160 rows) and an
   `orders` table run inside an in-browser **SQLite (WASM)** engine. Every
   required query is shown in its canonical **MySQL** form *and* executed **live**

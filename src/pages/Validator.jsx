@@ -1,14 +1,72 @@
 import { useMemo, useRef, useState } from 'react'
 import {
   UploadCloud, FileSpreadsheet, Play, Download, Scissors, ShieldCheck,
-  Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle, Sparkles, Loader2,
+  Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle, Sparkles, Loader2, Gauge,
 } from 'lucide-react'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { defaultCountryRules } from '../lib/countryRules.js'
 import { defaultDateFormats } from '../lib/dateRules.js'
 import { ROLES, autoDetectMapping, validateDataset, defaultPaymentModes } from '../lib/validateDataset.js'
-import { parseCsvFile, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
-import { buildTransactions, transactionColumns } from '../lib/sampleData.js'
+import { parseCsvFile, parseCsvText, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
+import { buildStressTransactions, transactionColumns } from '../lib/sampleData.js'
 import { summarizeReport, mapColumnsAi } from '../lib/ai.js'
+
+// How many validated rows to render at once. Large files stay responsive because
+// we never put thousands of <tr> in the DOM; the user can opt into "show all".
+const TABLE_CAP = 100
+
+// Visual summary of a validation report: pass/fail donut + issue-type bar chart.
+function ResultCharts({ report }) {
+  const passRate = report.total ? Math.round((report.validCount / report.total) * 100) : 0
+  const passData = [
+    { name: 'Valid', value: report.validCount, fill: '#16a34a' },
+    { name: 'Issues', value: report.invalidCount, fill: '#dc2626' },
+  ]
+  const issues = Object.entries(report.issueCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => ({ name: k.length > 26 ? k.slice(0, 26) + '…' : k, value: v }))
+
+  return (
+    <div className="panel pad" style={{ marginBottom: 16 }}>
+      <h3>Results at a glance</h3>
+      <div className="row" style={{ alignItems: 'center' }}>
+        <div style={{ width: 200, height: 200, position: 'relative', flex: 'none' }}>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={passData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={82} paddingAngle={2} stroke="none">
+                {passData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', color: passRate >= 80 ? '#16a34a' : passRate >= 50 ? '#b45309' : '#dc2626' }}>{passRate}%</div>
+              <div className="muted" style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px' }}>pass</div>
+            </div>
+          </div>
+        </div>
+        <div className="grow" style={{ minWidth: 280, height: Math.max(170, issues.length * 34 + 24) }}>
+          {issues.length ? (
+            <ResponsiveContainer>
+              <BarChart data={issues} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
+                <CartesianGrid horizontal={false} stroke="#eef1f6" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <Tooltip cursor={{ fill: '#fef2f2' }} />
+                <Bar dataKey="value" fill="#dc2626" radius={[0, 5, 5, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+              <span className="pill good">No issues — every row passed</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // AI: turn the validation report into a plain-English briefing + prioritized fixes.
 function AiSummary({ report }) {
@@ -118,6 +176,7 @@ export default function Validator() {
   const [showConfig, setShowConfig] = useState(false)
   const [mapBusy, setMapBusy] = useState(false)
   const [mapMsg, setMapMsg] = useState(null)
+  const [showAll, setShowAll] = useState(false)
 
   function loadData(parsedRows, parsedHeaders, name) {
     setRows(parsedRows)
@@ -133,13 +192,25 @@ export default function Validator() {
     loadData(r, h, file.name)
   }
 
-  function loadSample() {
-    loadData(buildTransactions(), transactionColumns, 'sample_transactions.csv')
+  // Load the real CSV artifact shipped in /public.
+  async function loadSample() {
+    const text = await fetch('/sample-transactions.csv').then((r) => r.text())
+    const { rows: r, headers: h } = parseCsvText(text)
+    loadData(r, h, 'sample-transactions.csv')
+  }
+
+  // Large synthetic dataset to demonstrate that validation + rendering stay fast.
+  function loadStress() {
+    loadData(buildStressTransactions(5000), transactionColumns, 'stress-5000-rows.csv')
   }
 
   function runValidation() {
     const cfg = { mapping, rules, defaultCountry, formats, paymentModes, requiredRoles: required }
-    setReport(validateDataset(rows, headers, cfg))
+    const t0 = performance.now()
+    const result = validateDataset(rows, headers, cfg)
+    result.ms = Math.round(performance.now() - t0)
+    setShowAll(false)
+    setReport(result)
   }
 
   // AI column mapping — useful for messy / non-English / unconventional headers.
@@ -203,6 +274,7 @@ export default function Validator() {
             <span className="muted" style={{ fontSize: 13 }}>{rows.length} rows · {headers.length} columns</span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
               <button className="btn ghost" onClick={loadSample}><FileSpreadsheet size={14} /> Sample</button>
+              <button className="btn ghost" onClick={loadStress} title="Load 5,000 synthetic rows"><Gauge size={14} /> 5k stress</button>
               <button className="btn ghost" onClick={() => { setRows([]); setHeaders([]); setReport(null); setFileName('') }}><RotateCcw size={14} /> Reset</button>
             </div>
           </div>
@@ -274,22 +346,14 @@ export default function Validator() {
       {report && (
         <>
           <div className="stats" style={{ marginBottom: 16 }}>
-            <div className="stat"><div className="n">{report.total}</div><div className="k">Total rows</div></div>
-            <div className="stat good"><div className="n">{report.validCount}</div><div className="k">Valid</div></div>
-            <div className="stat bad"><div className="n">{report.invalidCount}</div><div className="k">With issues</div></div>
+            <div className="stat"><div className="n">{report.total.toLocaleString()}</div><div className="k">Total rows</div></div>
+            <div className="stat good"><div className="n">{report.validCount.toLocaleString()}</div><div className="k">Valid</div></div>
+            <div className="stat bad"><div className="n">{report.invalidCount.toLocaleString()}</div><div className="k">With issues</div></div>
             <div className="stat"><div className="n">{report.total ? Math.round((report.validCount / report.total) * 100) : 0}%</div><div className="k">Pass rate</div></div>
+            <div className="stat"><div className="n">{report.ms}<span style={{ fontSize: 14 }}>ms</span></div><div className="k">Validated in</div></div>
           </div>
 
-          {Object.keys(report.issueCounts).length > 0 && (
-            <div className="panel pad" style={{ marginBottom: 16 }}>
-              <h3><AlertTriangle size={14} /> Issue breakdown</h3>
-              <div className="chiprow">
-                {Object.entries(report.issueCounts).sort((a, b) => b[1] - a[1]).map(([k, n]) => (
-                  <span className="pill bad" key={k}>{k} · {n}</span>
-                ))}
-              </div>
-            </div>
-          )}
+          <ResultCharts report={report} />
 
           <AiSummary report={report} />
 
@@ -312,7 +376,7 @@ export default function Validator() {
                   <tr><th>#</th>{headers.map((h) => <th key={h}>{h}</th>)}<th>Status</th></tr>
                 </thead>
                 <tbody>
-                  {report.results.map((r, i) => (
+                  {(showAll ? report.results : report.results.slice(0, TABLE_CAP)).map((r, i) => (
                     <tr key={i} className={r.valid ? '' : 'row-bad'}>
                       <td className="muted">{i + 1}</td>
                       {headers.map((h) => {
@@ -325,6 +389,17 @@ export default function Validator() {
                 </tbody>
               </table>
             </div>
+            {report.total > TABLE_CAP && (
+              <div className="row" style={{ alignItems: 'center', marginTop: 10 }}>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  Showing {showAll ? report.total.toLocaleString() : TABLE_CAP} of {report.total.toLocaleString()} rows
+                  {!showAll && ' (capped for performance)'}.
+                </span>
+                <button className="btn ghost" style={{ marginLeft: 'auto' }} onClick={() => setShowAll((s) => !s)}>
+                  {showAll ? `Show first ${TABLE_CAP}` : `Show all ${report.total.toLocaleString()} rows`}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ---- chunking ---- */}

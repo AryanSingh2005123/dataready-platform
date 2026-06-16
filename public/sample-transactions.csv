@@ -1,0 +1,31 @@
+order_id,customer_name,email,phone,country,order_date,product,amount,payment_mode
+ORD-1001,Aarav Sharma,aarav@gmail.com,+91 9876543210,IN,2025-04-10,Wireless Mouse,799,UPI
+ORD-1002,Mei Lin,mei.lin@gmail.com,+65 81234567,SG,2025-04-11,USB-C Cable,12.50,Card
+ORD-1003,John Lee,john@outlook.com,+1 4155552671,US,2025-04-14,Desk Lamp,30,Card
+ORD-1004,Aisha Khan,aisha@gmail.com,+971 501234567,AE,2025-04-13,Power Bank,120,Wallet
+ORD-1005,Tara Bose,tara@example.co.uk,+44 7400123456,GB,2025-04-08,Notebook,8,Card
+ORD-1006,Liam Brown,liam@example.au,+61 412345678,AU,2025-04-09,Desk Mat,60,COD
+ORD-1007,Wei Chen,wei@gmail.com,+65 91234567,SG,2025-04-06 14:30:00,Earbuds,89,PayNow
+ORD-1008,Dev Rao,dev@gmail.com,+91 7012345678,IN,11/04/2025,Stylus Pen,599,NetBanking
+ORD-1009,Priya Nair,priya@gmail.com,+91 8123456780,IN,2025-04-05,Webcam,2499,UPI
+ORD-1010,Sam Park,sam@example.com,+1 2025551234,US,2025-04-12,Monitor Stand,45,Card
+ORD-1011,Rohan Das,rohan@yahoo.com,98765,IN,2025-04-12,Keyboard,1499,NetBanking
+ORD-1012,Karan Mehta,karan@gmail.com,+91 12345,IN,2025-04-07,Laptop Sleeve,650,UPI
+ORD-1013,Lily Wong,lily@gmail.com,+65 12345678,SG,2025-04-06,Cable Clip,15,PayNow
+ORD-1014,Noah Singh,noah@gmail.com,+91 70123abcde,IN,2025-04-07,Charger,299,COD
+ORD-1015,Ben Cole,ben@gmail.com,+44 7400123457,GB,2025-13-40,Mug,12,Card
+ORD-1016,Ivy Shah,ivy@gmail.com,+91 9988776655,IN,2025/04/31,Bottle,20,UPI
+ORD-1017,Omar Ali,omar@gmail.com,+971 502223344,AE,2025-04-03,Bag,-200,Wallet
+ORD-1018,Zoe Tan,zoe@gmail.com,+65 88990011,SG,2025-04-02,Pen,free,Card
+ORD-1019,Max Ray,max[at]mail.com,+1 3105550000,US,2025-04-01,Clip,10,Card
+ORD-1020,Nina Roy,nina@gmail.com,+91 9090909090,IN,2025-04-04,Tape,25,Bitcoin
+ORD-1001,Aarav Sharma,aarav@gmail.com,+91 9876543210,IN,2025-04-10,Wireless Mouse,799,UPI
+ORD-1022,Ella Fox,ella@gmail.com,,IN,2025-04-05,Folder,18,Card
+ORD-1023,Finn Wu,finn@gmail.com,+65 83334444,SG,,Tray,22,PayNow
+ORD-1024,Gus Bell,gus@,+44 12,GB,2025-13-01,Box,-5,Cash
+ORD-1025,Hana Kim,hana@gmail.com,+1 4085551212,US,2025-03-15,Lamp,75,Card
+ORD-1026,Raj Patel,raj@gmail.com,+91 6012345678,IN,2025-04-02,Hub,349,UPI
+ORD-1027,Sara Ng,sara@gmail.com,+65 96660000,SG,2025-04-01,Stand,40,PayNow
+ORD-1028,Tom Vale,tom@gmail.com,+61 498765432,AU,2025-03-30,Tripod,150,COD
+ORD-1029,Uma Iyer,uma@gmail.com,+91 9123456789,IN,2025-03-28,Ring Light,1299,NetBanking
+ORD-1030,Vik Sen,vik@gmail.com,+971 503334444,AE,2025-03-25,Adapter,55,Wallet

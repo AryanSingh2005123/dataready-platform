@@ -88,3 +88,31 @@ export function buildTransactions() {
 }
 
 export const transactionColumns = ['order_id', 'customer_name', 'email', 'phone', 'country', 'order_date', 'product', 'amount', 'payment_mode']
+
+// A large, deterministic transactions dataset to stress-test validation and
+// rendering performance. ~20% of rows carry a single injected defect.
+export function buildStressTransactions(n = 5000) {
+  const rand = rng(7)
+  const pay = ['Card', 'UPI', 'NetBanking', 'Wallet', 'COD', 'PayNow']
+  const rows = []
+  for (let i = 1; i <= n; i++) {
+    const first = ['6', '7', '8', '9'][Math.floor(rand() * 4)]
+    let phone = `+91 ${first}${String(Math.floor(rand() * 1e9)).padStart(9, '0')}`
+    let amount = String(50 + Math.floor(rand() * 5000))
+    let email = `user${i}@gmail.com`
+    let order_date = `2025-0${1 + Math.floor(rand() * 4)}-${String(1 + Math.floor(rand() * 28)).padStart(2, '0')}`
+    const mode = pay[Math.floor(rand() * pay.length)]
+    if (rand() < 0.2) {
+      const k = Math.floor(rand() * 4)
+      if (k === 0) phone = '123'
+      else if (k === 1) amount = '-5'
+      else if (k === 2) email = 'bad[at]example'
+      else order_date = '2025-13-40'
+    }
+    rows.push({
+      order_id: `ORD-${100000 + i}`, customer_name: `User ${i}`, email, phone,
+      country: 'IN', order_date, product: 'Item', amount, payment_mode: mode,
+    })
+  }
+  return rows
+}
