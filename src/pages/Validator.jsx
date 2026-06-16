@@ -6,7 +6,7 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { defaultCountryRules } from '../lib/countryRules.js'
 import { defaultDateFormats } from '../lib/dateRules.js'
-import { ROLES, autoDetectMapping, validateDataset } from '../lib/validateDataset.js'
+import { ROLES, autoDetectMapping, validateDataset, columnsForRole } from '../lib/validateDataset.js'
 import { parseCsvFile, parseCsvText, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
 import { parseXlsxFile, looksLikeExcel } from '../lib/excel.js'
 import { buildStressTransactions, transactionColumns } from '../lib/sampleData.js'
@@ -332,7 +332,7 @@ export default function Validator() {
                 <label className="field" title={role.hint}>{role.label}</label>
                 <select value={mapping[role.key] || ''} onChange={(e) => setMapping({ ...mapping, [role.key]: e.target.value || undefined })}>
                   <option value="">— none —</option>
-                  {headers.map((h) => <option key={h} value={h}>{h}</option>)}
+                  {columnsForRole(role.key, headers, rows, mapping[role.key]).map((h) => <option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
             ))}

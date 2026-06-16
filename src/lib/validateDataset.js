@@ -20,6 +20,32 @@ const HEADER_HINTS = {
   email: [/email/i, /e-mail/i, /\bmail\b/i],
 }
 
+// Columns that plausibly fit a role — by header name OR by sniffing a few sample
+// values — so each mapping dropdown only offers sensible choices (e.g. the email
+// role only lists email-like columns). The currently-selected column is always
+// kept; if nothing matches we fall back to all columns so the user isn't stuck.
+const EMAILish = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const PHONEish = /^[+]?[\d\s()./-]{7,}$/
+const DATEish = /(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})|(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})/
+
+export function columnsForRole(role, headers, rows, current) {
+  const sample = rows.slice(0, 8)
+  const frac = (h, fn) => {
+    const vals = sample.map((r) => String(r[h] ?? '').trim()).filter(Boolean)
+    return vals.length ? vals.filter(fn).length / vals.length : 0
+  }
+  const matches = (h) => {
+    if ((HEADER_HINTS[role] || []).some((re) => re.test(h))) return true
+    if (role === 'email') return frac(h, (v) => EMAILish.test(v)) >= 0.5
+    if (role === 'phone') return frac(h, (v) => PHONEish.test(v) && !DATEish.test(v) && v.replace(/\D/g, '').length <= 15) >= 0.5
+    if (role === 'date') return frac(h, (v) => DATEish.test(v)) >= 0.5
+    return false // id: rely on header hints only (values are too ambiguous)
+  }
+  let cols = headers.filter(matches)
+  if (current && !cols.includes(current)) cols = [current, ...cols]
+  return cols.length ? cols : headers
+}
+
 // Best-effort guess of column->role from headers. Returns { role: columnName }.
 export function autoDetectMapping(headers) {
   const mapping = {}
