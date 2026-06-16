@@ -1,12 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
 import {
-  UploadCloud, FileSpreadsheet, Play, Download, Scissors, ShieldCheck,
+  UploadCloud, FileSpreadsheet, Play, Download, Scissors,
   Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle, Sparkles, Loader2, Gauge,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { defaultCountryRules } from '../lib/countryRules.js'
 import { defaultDateFormats } from '../lib/dateRules.js'
-import { ROLES, autoDetectMapping, validateDataset, defaultPaymentModes } from '../lib/validateDataset.js'
+import { ROLES, autoDetectMapping, validateDataset } from '../lib/validateDataset.js'
 import { parseCsvFile, parseCsvText, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
 import { parseXlsxFile, looksLikeExcel } from '../lib/excel.js'
 import { buildStressTransactions, transactionColumns } from '../lib/sampleData.js'
@@ -185,7 +185,6 @@ export default function Validator() {
   const [defaultCountry, setDefaultCountry] = useState('IN')
   const [rules, setRules] = useState(defaultCountryRules)
   const [formats, setFormats] = useState(defaultDateFormats)
-  const [paymentModes, setPaymentModes] = useState(defaultPaymentModes)
   const [required, setRequired] = useState(REQUIRED_DEFAULT)
   const [chunkSize, setChunkSize] = useState(5)
   const [report, setReport] = useState(null)
@@ -232,7 +231,7 @@ export default function Validator() {
   }
 
   function runValidation() {
-    const cfg = { mapping, rules, defaultCountry, formats, paymentModes, requiredRoles: required }
+    const cfg = { mapping, rules, defaultCountry, formats, requiredRoles: required }
     const t0 = performance.now()
     const result = validateDataset(rows, headers, cfg)
     result.ms = Math.round(performance.now() - t0)
@@ -366,10 +365,6 @@ export default function Validator() {
                   <ChipList items={formats} placeholder="e.g. YYYY/MM/DD"
                     onRemove={(x) => setFormats(formats.filter((f) => f !== x))}
                     onAdd={(x) => setFormats([...new Set([...formats, x])])} />
-                  <h3 style={{ marginTop: 18 }}><ShieldCheck size={14} /> Allowed payment modes</h3>
-                  <ChipList items={paymentModes} placeholder="e.g. ApplePay"
-                    onRemove={(x) => setPaymentModes(paymentModes.filter((m) => m !== x))}
-                    onAdd={(x) => setPaymentModes([...new Set([...paymentModes, x])])} />
                 </div>
               </div>
             </div>

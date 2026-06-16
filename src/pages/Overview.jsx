@@ -105,8 +105,8 @@ export default function Overview({ goTo }) {
           normalises everything to ISO.
         </Capability>
         <Capability icon={ShieldCheck} title="Integrity checks">
-          Required fields, numeric amounts, email format, allowed payment modes, and duplicate order IDs —
-          across every row.
+          Required fields, email format, and duplicate ID detection — across every row, with each
+          validated value normalised in the cleaned output.
         </Capability>
         <Capability icon={Scissors} title="Clean output + chunking">
           Download a validated CSV and an errors report, and auto-split large files into evenly sized chunks

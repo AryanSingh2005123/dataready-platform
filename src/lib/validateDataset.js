@@ -1,6 +1,6 @@
 // Orchestrates validation of a whole transaction dataset, field by field, row by
-// row. The platform is schema-flexible: it auto-detects which columns are phone /
-// date / amount / email / payment mode / id, and the user can override the mapping.
+// row. The platform is schema-flexible: it auto-detects which columns are id /
+// phone / date / email, and the user can override the mapping.
 
 import { validatePhone } from './countryRules.js'
 import { validateDateTime } from './dateRules.js'
@@ -10,18 +10,14 @@ export const ROLES = [
   { key: 'id', label: 'Order / ID', hint: 'unique identifier; duplicates are flagged' },
   { key: 'phone', label: 'Phone', hint: 'validated against country rules' },
   { key: 'date', label: 'Date / time', hint: 'validated against accepted formats' },
-  { key: 'amount', label: 'Amount', hint: 'must be a non-negative number' },
   { key: 'email', label: 'Email', hint: 'basic RFC-ish format check' },
-  { key: 'payment', label: 'Payment mode', hint: 'must be in the allowed set' },
 ]
 
 const HEADER_HINTS = {
   id: [/order.*id/i, /(?:^|[_\s])id\b/i, /_id\b/i, /txn/i, /transaction.*id/i, /invoice/i],
   phone: [/phone/i, /mobile/i, /contact/i, /\bmsisdn\b/i, /\btel\b/i],
   date: [/date/i, /time/i, /\bts\b/i, /timestamp/i, /created/i],
-  amount: [/amount/i, /price/i, /total/i, /value/i, /\bamt\b/i],
   email: [/email/i, /e-mail/i, /\bmail\b/i],
-  payment: [/payment/i, /pay.*mode/i, /method/i, /\bmode\b/i],
 }
 
 // Best-effort guess of column->role from headers. Returns { role: columnName }.
@@ -43,12 +39,10 @@ export function autoDetectMapping(headers) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const defaultPaymentModes = ['Card', 'UPI', 'NetBanking', 'Wallet', 'COD', 'PayNow']
-
 // Validate one row against the mapping + config. Returns:
 //   { valid, errors:[{field,message}], cleaned:{...}, raw }
 function validateRow(row, cfg) {
-  const { mapping, rules, defaultCountry, formats, paymentModes, requiredRoles } = cfg
+  const { mapping, rules, defaultCountry, formats, requiredRoles } = cfg
   const errors = []
   const cleaned = { ...row }
 
@@ -80,32 +74,11 @@ function validateRow(row, cfg) {
     }
   }
 
-  if (mapping.amount) {
-    const col = mapping.amount
-    const v = String(row[col] ?? '').trim()
-    if (v) {
-      const n = Number(v.replace(/[, ]/g, ''))
-      if (!Number.isFinite(n)) errors.push({ field: col, message: `amount "${v}" is not a number` })
-      else if (n < 0) errors.push({ field: col, message: `amount is negative` })
-      else cleaned[col] = String(n)
-    }
-  }
-
   if (mapping.email) {
     const col = mapping.email
     const v = String(row[col] ?? '').trim()
     if (v && !EMAIL_RE.test(v)) errors.push({ field: col, message: `invalid email format` })
     else if (v) cleaned[col] = v.toLowerCase()
-  }
-
-  if (mapping.payment) {
-    const col = mapping.payment
-    const v = String(row[col] ?? '').trim()
-    if (v) {
-      const hit = paymentModes.find((m) => m.toLowerCase() === v.toLowerCase())
-      if (!hit) errors.push({ field: col, message: `payment mode "${v}" not in allowed set` })
-      else cleaned[col] = hit
-    }
   }
 
   return { valid: errors.length === 0, errors, cleaned, raw: row }
