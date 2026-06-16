@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import {
-  UploadCloud, FileSpreadsheet, Play, Download, Scissors, Check,
+  UploadCloud, FileSpreadsheet, Play, Download, Scissors, Check, Search,
   Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle, Sparkles, Loader2, Gauge,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
@@ -175,6 +175,87 @@ function CountryRuleEditor({ rules, setRules }) {
   )
 }
 
+// Look up or type one record and see each field validate live. Reuses the full
+// validation engine on a single synthetic row, so results match bulk validation.
+function RecordChecker({ mapping, rows, rules, defaultCountry, formats, required }) {
+  const roles = ROLES.filter((r) => mapping[r.key])
+  const [vals, setVals] = useState({})
+  const [notFound, setNotFound] = useState(false)
+
+  function lookup() {
+    const idCol = mapping.id
+    const q = String(vals.id || '').trim()
+    if (!idCol || !q) return
+    const hit = rows.find((row) => String(row[idCol] ?? '').trim() === q)
+    setNotFound(!hit)
+    if (hit) {
+      const next = {}
+      for (const r of roles) next[r.key] = String(hit[mapping[r.key]] ?? '')
+      setVals(next)
+    }
+  }
+
+  const result = useMemo(() => {
+    const record = {}
+    const mh = []
+    for (const r of roles) { const col = mapping[r.key]; record[col] = vals[r.key] ?? ''; mh.push(col) }
+    const rep = validateDataset([record], mh, { mapping, rules, defaultCountry, formats, requiredRoles: required })
+    const res = rep.results[0]
+    const byCol = {}
+    for (const e of res.errors) byCol[e.field] = (byCol[e.field] ? byCol[e.field] + '; ' : '') + e.message
+    return { valid: res.valid, byCol, cleaned: res.cleaned }
+  }, [vals, mapping, rules, defaultCountry, formats, required, roles])
+
+  const anyEntered = roles.some((r) => String(vals[r.key] ?? '').trim())
+
+  return (
+    <div className="panel pad" style={{ marginBottom: 18 }}>
+      <span className="eyebrow"><Search size={12} /> Single-record check</span>
+      <div className="row" style={{ alignItems: 'center', margin: '6px 0 2px' }}>
+        <h2 style={{ margin: 0 }}>Check a record</h2>
+        {anyEntered && (
+          <span className={`pill ${result.valid ? 'good' : 'bad'}`} style={{ marginLeft: 'auto' }}>
+            {result.valid ? <><Check size={13} /> Valid record</> : <><AlertTriangle size={13} /> Invalid</>}
+          </span>
+        )}
+      </div>
+      <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+        Type the {mapping.id || 'id'} and press Find to pull a row from this file, or enter values manually — each field validates live.
+      </p>
+
+      <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))' }}>
+        {roles.map((r) => {
+          const col = mapping[r.key]
+          const v = vals[r.key] ?? ''
+          const touched = String(v).trim()
+          const err = result.byCol[col]
+          const normalised = result.cleaned[col] && result.cleaned[col] !== v ? result.cleaned[col] : null
+          return (
+            <div key={r.key}>
+              <label className="field">{r.label} <span className="muted" style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· {col}</span></label>
+              <div style={{ position: 'relative' }}>
+                <input type="text" value={v} placeholder={r.key === 'id' ? 'enter id…' : ''}
+                  onChange={(e) => { setVals({ ...vals, [r.key]: e.target.value }); setNotFound(false) }}
+                  onKeyDown={(e) => { if (r.key === 'id' && e.key === 'Enter') lookup() }}
+                  style={{ paddingRight: r.key === 'id' ? 38 : 10, borderColor: touched ? (err ? 'var(--bad)' : 'var(--good)') : undefined }} />
+                {r.key === 'id' && <button className="btn ghost" title="Find in file" style={{ position: 'absolute', right: 4, top: 4, padding: '4px 7px' }} onClick={lookup}><Search size={13} /></button>}
+              </div>
+              {touched && (err
+                ? <p style={{ color: 'var(--bad)', fontSize: 12, margin: '5px 2px 0' }}><AlertTriangle size={11} style={{ verticalAlign: '-1px' }} /> {err}</p>
+                : <p style={{ color: 'var(--good)', fontSize: 12, margin: '5px 2px 0' }}><Check size={11} style={{ verticalAlign: '-1px' }} /> valid{normalised ? ` → ${normalised}` : ''}</p>)}
+            </div>
+          )
+        })}
+      </div>
+
+      {notFound && <p style={{ color: 'var(--bad)', fontSize: 13, marginTop: 10 }}>No record with {mapping.id} = “{vals.id}” in this file.</p>}
+      <div style={{ marginTop: 12 }}>
+        <button className="btn ghost" onClick={() => { setVals({}); setNotFound(false) }}><RotateCcw size={13} /> Clear</button>
+      </div>
+    </div>
+  )
+}
+
 export default function Validator() {
   const fileRef = useRef(null)
   const [over, setOver] = useState(false)
@@ -189,6 +270,7 @@ export default function Validator() {
   const [chunkSize, setChunkSize] = useState(5)
   const [report, setReport] = useState(null)
   const [showConfig, setShowConfig] = useState(false)
+  const [showMapping, setShowMapping] = useState(false)
   const [mapBusy, setMapBusy] = useState(false)
   const [mapMsg, setMapMsg] = useState(null)
   const [showAll, setShowAll] = useState(false)
@@ -316,42 +398,58 @@ export default function Validator() {
           {/* ---- column mapping ---- */}
           <hr className="divider" />
           <div className="row" style={{ alignItems: 'center', marginBottom: 10 }}>
-            <h3 style={{ margin: 0 }}>Column mapping <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>· auto-detected, editable</span></h3>
-            <button className="btn" style={{ marginLeft: 'auto', borderColor: 'var(--brand)', color: 'var(--brand-ink)' }} onClick={aiMap} disabled={mapBusy}>
-              {mapBusy ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />} Auto-map with AI
-            </button>
+            <h3 style={{ margin: 0 }}>Column mapping <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>· auto-detected</span></h3>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <button className="btn ghost" onClick={() => setShowMapping((s) => !s)}>{showMapping ? 'Done' : 'Edit columns'}</button>
+              <button className="btn" style={{ borderColor: 'var(--brand)', color: 'var(--brand-ink)' }} onClick={aiMap} disabled={mapBusy}>
+                {mapBusy ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />} Auto-map with AI
+              </button>
+            </div>
           </div>
           {mapMsg && (
             <p className={mapMsg.ok ? 'muted' : ''} style={{ fontSize: 13, margin: '0 0 10px', color: mapMsg.ok ? undefined : 'var(--bad)' }}>
               {mapMsg.text}
             </p>
           )}
-          <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))' }}>
-            {ROLES.map((role) => (
-              <div key={role.key}>
-                <label className="field" title={role.hint}>{role.label}</label>
-                <select value={mapping[role.key] || ''} onChange={(e) => setMapping({ ...mapping, [role.key]: e.target.value || undefined })}>
-                  <option value="">— none —</option>
-                  {columnsForRole(role.key, headers, rows, mapping[role.key]).map((h) => <option key={h} value={h}>{h}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
 
-          <div style={{ marginTop: 16 }}>
-            <label className="field">Required fields <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· blank values in these columns are flagged</span></label>
+          {showMapping ? (
+            <>
+              <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))' }}>
+                {ROLES.map((role) => (
+                  <div key={role.key}>
+                    <label className="field" title={role.hint}>{role.label}</label>
+                    <select value={mapping[role.key] || ''} onChange={(e) => setMapping({ ...mapping, [role.key]: e.target.value || undefined })}>
+                      <option value="">— none —</option>
+                      {columnsForRole(role.key, headers, rows, mapping[role.key]).map((h) => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label className="field">Required fields <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· blank values in these columns are flagged</span></label>
+                <div className="chiprow">
+                  {ROLES.filter((r) => mapping[r.key]).map((r) => {
+                    const on = required.includes(r.key)
+                    return (
+                      <button key={r.key} className="chip" style={{ cursor: 'pointer', borderColor: on ? 'var(--brand)' : 'var(--line)', color: on ? 'var(--brand-ink)' : 'var(--muted)', background: on ? 'var(--brand-soft)' : '#faf9ff' }}
+                        onClick={() => setRequired(on ? required.filter((x) => x !== r.key) : [...required, r.key])}>
+                        {on ? <Check size={12} /> : <X size={12} style={{ opacity: .4 }} />} {r.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
+          ) : (
             <div className="chiprow">
-              {ROLES.filter((r) => mapping[r.key]).map((r) => {
-                const on = required.includes(r.key)
-                return (
-                  <button key={r.key} className="chip" style={{ cursor: 'pointer', borderColor: on ? 'var(--brand)' : 'var(--line)', color: on ? 'var(--brand-ink)' : 'var(--muted)', background: on ? 'var(--brand-soft)' : '#faf9ff' }}
-                    onClick={() => setRequired(on ? required.filter((x) => x !== r.key) : [...required, r.key])}>
-                    {on ? <Check size={12} /> : <X size={12} style={{ opacity: .4 }} />} {r.label}
-                  </button>
-                )
-              })}
+              {ROLES.filter((r) => mapping[r.key]).map((r) => (
+                <span key={r.key} className="chip"><strong>{r.label}</strong>&nbsp;= {mapping[r.key]}{required.includes(r.key) ? ' *' : ''}</span>
+              ))}
+              {ROLES.filter((r) => mapping[r.key]).length === 0
+                ? <span className="muted" style={{ fontSize: 13 }}>No columns mapped — click “Edit columns”.</span>
+                : <span className="muted" style={{ fontSize: 12, alignSelf: 'center' }}>* required</span>}
             </div>
-          </div>
+          )}
 
           <div className="row" style={{ marginTop: 16, alignItems: 'flex-end' }}>
             <div style={{ minWidth: 200 }}>
@@ -385,6 +483,10 @@ export default function Validator() {
             </div>
           )}
         </div>
+      )}
+
+      {rows.length > 0 && Object.keys(mapping).length > 0 && (
+        <RecordChecker mapping={mapping} rows={rows} rules={rules} defaultCountry={defaultCountry} formats={formats} required={required} />
       )}
 
       {/* ---- results ---- */}
