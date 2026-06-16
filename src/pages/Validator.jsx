@@ -11,6 +11,7 @@ import { parseCsvFile, parseCsvText, downloadCsv, downloadErrorReport, downloadC
 import { parseXlsxFile, looksLikeExcel } from '../lib/excel.js'
 import { buildStressTransactions, transactionColumns } from '../lib/sampleData.js'
 import { summarizeReport, mapColumnsAi } from '../lib/ai.js'
+import { addActivity } from '../lib/activity.js'
 
 // How many validated rows to render at once. Large files stay responsive because
 // we never put thousands of <tr> in the DOM; the user can opt into "show all".
@@ -20,12 +21,13 @@ const TABLE_CAP = 100
 function ResultCharts({ report }) {
   const passRate = report.total ? Math.round((report.validCount / report.total) * 100) : 0
   const passData = [
-    { name: 'Valid', value: report.validCount, fill: '#16a34a' },
-    { name: 'Issues', value: report.invalidCount, fill: '#dc2626' },
+    { name: 'Valid', value: report.validCount },
+    { name: 'Issues', value: report.invalidCount },
   ]
   const issues = Object.entries(report.issueCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([k, v]) => ({ name: k.length > 26 ? k.slice(0, 26) + '…' : k, value: v }))
+  const centerColor = passRate >= 80 ? '#5cc79b' : passRate >= 50 ? '#d6a85b' : '#e08293'
 
   return (
     <div className="panel pad" style={{ marginBottom: 16 }}>
@@ -34,15 +36,23 @@ function ResultCharts({ report }) {
         <div style={{ width: 200, height: 200, position: 'relative', flex: 'none' }}>
           <ResponsiveContainer>
             <PieChart>
+              <defs>
+                <linearGradient id="gValid" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#62c79c" /><stop offset="100%" stopColor="#3f9e78" />
+                </linearGradient>
+                <linearGradient id="gIssue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#e493a1" /><stop offset="100%" stopColor="#bf6072" />
+                </linearGradient>
+              </defs>
               <Pie data={passData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={82} paddingAngle={2} stroke="none">
-                {passData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                <Cell fill="url(#gValid)" /><Cell fill="url(#gIssue)" />
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', color: passRate >= 80 ? '#16a34a' : passRate >= 50 ? '#b45309' : '#dc2626' }}>{passRate}%</div>
+              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', color: centerColor }}>{passRate}%</div>
               <div className="muted" style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px' }}>pass</div>
             </div>
           </div>
@@ -51,11 +61,16 @@ function ResultCharts({ report }) {
           {issues.length ? (
             <ResponsiveContainer>
               <BarChart data={issues} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
-                <CartesianGrid horizontal={false} stroke="rgba(148,163,184,.12)" />
+                <defs>
+                  <linearGradient id="gIssueBar" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#b65b6c" /><stop offset="100%" stopColor="#e08a9b" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid horizontal={false} stroke="rgba(148,163,184,.1)" />
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8a97af' }} />
                 <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#8a97af' }} />
-                <Tooltip cursor={{ fill: 'rgba(244,63,94,.14)' }} />
-                <Bar dataKey="value" fill="#dc2626" radius={[0, 5, 5, 0]} />
+                <Tooltip cursor={{ fill: 'rgba(224,130,147,.1)' }} />
+                <Bar dataKey="value" fill="url(#gIssueBar)" radius={[0, 6, 6, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -223,6 +238,7 @@ export default function Validator() {
     result.ms = Math.round(performance.now() - t0)
     setShowAll(false)
     setReport(result)
+    addActivity({ file: fileName, total: result.total, valid: result.validCount, invalid: result.invalidCount, ms: result.ms })
   }
 
   // AI column mapping — useful for messy / non-English / unconventional headers.

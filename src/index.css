@@ -8,12 +8,12 @@
   --brand: #3b82f6;
   --brand-ink: #7aa7ff;
   --brand-soft: rgba(59, 130, 246, .14);
-  --good: #34d399;
-  --good-soft: rgba(52, 211, 153, .14);
-  --bad: #fb7185;
-  --bad-soft: rgba(244, 63, 94, .16);
-  --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, .15);
+  --good: #5cc79b;
+  --good-soft: rgba(70, 192, 138, .13);
+  --bad: #e08293;
+  --bad-soft: rgba(224, 130, 147, .14);
+  --warn: #e0b15e;
+  --warn-soft: rgba(224, 177, 94, .14);
   --radius: 16px;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 20px 44px -22px rgba(0, 0, 0, .7);
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;

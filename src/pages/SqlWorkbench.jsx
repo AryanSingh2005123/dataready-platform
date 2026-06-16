@@ -73,11 +73,16 @@ function Chart({ result, cfg }) {
     <div style={{ height: 240, marginTop: 14 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,.12)" vertical={false} />
+          <defs>
+            <linearGradient id="gSqlBar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6aa3ff" /><stop offset="100%" stopColor="#2f6fe0" />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,.1)" vertical={false} />
           <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#8a97af' }} interval={0} angle={data.length > 6 ? -25 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 50 : 24} />
           <YAxis tick={{ fontSize: 11, fill: '#8a97af' }} allowDecimals={false} />
-          <Tooltip cursor={{ fill: 'rgba(59,130,246,.14)' }} />
-          <Bar dataKey="value" fill="#2563eb" radius={[5, 5, 0, 0]} />
+          <Tooltip cursor={{ fill: 'rgba(59,130,246,.12)' }} />
+          <Bar dataKey="value" fill="url(#gSqlBar)" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
