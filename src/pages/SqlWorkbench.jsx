@@ -1,11 +1,68 @@
 import { useEffect, useState } from 'react'
-import { Play, ChevronDown, ChevronRight, Loader2, Database, Download, AlertTriangle } from 'lucide-react'
+import { Play, ChevronDown, ChevronRight, Loader2, Database, Download, AlertTriangle, Sparkles } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { sections, dataReviewAnswer, TODAY } from '../lib/queries.js'
 import { run } from '../lib/db.js'
 import { buildCustomers, customerColumns } from '../lib/sampleData.js'
 import { downloadCsv } from '../lib/csv.js'
+import { askSql, isSafeSelect } from '../lib/ai.js'
 import ResultTable from '../components/ResultTable.jsx'
+
+const SAMPLE_QUESTIONS = [
+  'Which 5 cities have the most customers?',
+  'How many gmail users signed up in March 2025?',
+  'Average order amount per city for the top 5 cities',
+]
+
+// AI: natural-language question -> Claude writes a read-only SQLite query -> run it live.
+function AskAI() {
+  const [q, setQ] = useState('')
+  const [sql, setSql] = useState('')
+  const [explanation, setExplanation] = useState('')
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  async function ask(question) {
+    const text = (question ?? q).trim()
+    if (!text) return
+    setQ(text); setBusy(true); setError(null); setResult(null); setSql(''); setExplanation('')
+    try {
+      const { sql: generated, explanation: why } = await askSql(text)
+      setSql(generated); setExplanation(why)
+      if (!isSafeSelect(generated)) { setError('The model returned a non read-only query, which was blocked.'); return }
+      setResult(await run(generated))
+    } catch (e) {
+      setError(String(e.message || e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="panel pad" style={{ marginBottom: 18, borderColor: 'var(--brand)' }}>
+      <span className="eyebrow"><Sparkles size={12} /> AI · ask in plain English</span>
+      <h3 style={{ marginTop: 6 }}>Type a question — Claude writes the SQL and runs it</h3>
+      <div className="row" style={{ gap: 8 }}>
+        <input type="text" value={q} placeholder="e.g. Which cities have more than 20 customers?"
+          onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') ask() }} />
+        <button className="btn primary" onClick={() => ask()} disabled={busy} style={{ flex: 'none' }}>
+          {busy ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />} Ask
+        </button>
+      </div>
+      <div className="chiprow" style={{ marginTop: 10 }}>
+        {SAMPLE_QUESTIONS.map((s) => (
+          <button key={s} className="chip" style={{ cursor: 'pointer' }} onClick={() => ask(s)}>{s}</button>
+        ))}
+      </div>
+
+      {explanation && <p className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{explanation}</p>}
+      {sql && <pre className="code" style={{ marginTop: 8 }}>{sql}</pre>}
+      {error && <pre className="code light" style={{ marginTop: 12, color: 'var(--bad)' }}>{error}</pre>}
+      {result && !error && <div style={{ marginTop: 12 }}><ResultTable columns={result.columns} rows={result.rows} /></div>}
+    </div>
+  )
+}
 
 function Chart({ result, cfg }) {
   const xi = result.columns.indexOf(cfg.x)
@@ -124,6 +181,8 @@ export default function SqlWorkbench() {
           {dataReviewAnswer.map((l, i) => <li key={i} style={{ marginBottom: 5 }}>{l}</li>)}
         </ol>
       </div>
+
+      <AskAI />
 
       {sections.map((s) => (
         <section key={s.id} style={{ marginBottom: 26 }}>

@@ -1,13 +1,57 @@
 import { useMemo, useRef, useState } from 'react'
 import {
   UploadCloud, FileSpreadsheet, Play, Download, Scissors, ShieldCheck,
-  Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle,
+  Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle, Sparkles, Loader2,
 } from 'lucide-react'
 import { defaultCountryRules } from '../lib/countryRules.js'
 import { defaultDateFormats } from '../lib/dateRules.js'
 import { ROLES, autoDetectMapping, validateDataset, defaultPaymentModes } from '../lib/validateDataset.js'
 import { parseCsvFile, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
 import { buildTransactions, transactionColumns } from '../lib/sampleData.js'
+import { summarizeReport } from '../lib/ai.js'
+
+// AI: turn the validation report into a plain-English briefing + prioritized fixes.
+function AiSummary({ report }) {
+  const [summary, setSummary] = useState('')
+  const [error, setError] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  async function run() {
+    setBusy(true); setError(null); setSummary('')
+    const sample = report.results.filter((r) => !r.valid).slice(0, 10)
+      .flatMap((r) => r.errors.map((e) => e.message)).slice(0, 12)
+    try {
+      const { summary: s } = await summarizeReport({
+        total: report.total, valid: report.validCount, invalid: report.invalidCount,
+        passRate: report.total ? Math.round((report.validCount / report.total) * 100) : 0,
+        issueCounts: report.issueCounts, sampleIssues: sample,
+      })
+      setSummary(s)
+    } catch (e) {
+      setError(String(e.message || e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="panel pad" style={{ marginBottom: 16, borderColor: 'var(--brand)' }}>
+      <div className="row" style={{ alignItems: 'center' }}>
+        <h3 style={{ margin: 0 }}><Sparkles size={14} /> AI data-quality briefing</h3>
+        <button className="btn primary" style={{ marginLeft: 'auto' }} onClick={run} disabled={busy}>
+          {busy ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />} Explain &amp; fix
+        </button>
+      </div>
+      {!summary && !error && !busy && (
+        <p className="muted" style={{ fontSize: 13, margin: '8px 0 0' }}>
+          Get a plain-English summary of the issues and a prioritized fix list, written by Claude from this report.
+        </p>
+      )}
+      {error && <pre className="code light" style={{ marginTop: 12, color: 'var(--bad)' }}>{error}</pre>}
+      {summary && <p style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.6, margin: '12px 0 0' }}>{summary}</p>}
+    </div>
+  )
+}
 
 const REQUIRED_DEFAULT = ['id', 'phone', 'date']
 
@@ -219,6 +263,8 @@ export default function Validator() {
               </div>
             </div>
           )}
+
+          <AiSummary report={report} />
 
           <div className="panel pad" style={{ marginBottom: 16 }}>
             <div className="row" style={{ alignItems: 'center', marginBottom: 12 }}>

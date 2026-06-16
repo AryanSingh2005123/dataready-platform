@@ -14,8 +14,29 @@ A single web app that covers the whole **Xeno Implementation Internship** brief:
   required query is shown in its canonical **MySQL** form *and* executed **live**
   to produce a real result table, with charts for the aggregate questions.
 
-Everything runs **client-side** — no backend, no upload. Transaction data never
-leaves the browser tab, which also makes it free to host and trivial to deploy.
+Validation, cleaning, chunking, and SQL all run **client-side** — transaction
+data never leaves the browser tab. The only server-side piece is the optional AI
+layer (below), which is a thin proxy so the Claude API key stays secret.
+
+## AI features (optional)
+
+Two places call **Claude** (`claude-opus-4-8` via the official Anthropic SDK)
+through a small serverless function at `/api/ai`, so the API key stays
+server-side and never reaches the browser:
+
+- **SQL Workbench → "Ask in plain English"** — type a question, Claude writes a
+  read-only SQLite query (guarded client-side to SELECT-only), and it runs live
+  against the sample data.
+- **Validator → "Explain & fix"** — Claude turns the validation report into a
+  plain-English data-quality briefing with a prioritized fix list.
+
+**No key? The app still works fully** — those two buttons just show a "not
+configured" notice. To enable AI, set `ANTHROPIC_API_KEY`:
+
+- Local dev: copy `.env.example` → `.env.local` and add the key (Vite's dev
+  middleware serves `/api/ai`).
+- Vercel: add `ANTHROPIC_API_KEY` as a project env var (the `api/` function is
+  auto-detected). Optional overrides: `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`.
 
 ## Run locally
 
@@ -58,8 +79,12 @@ src/
     sampleData.js       deterministic customers + messy transactions samples
     db.js               sql.js (SQLite WASM) loader + MySQL-style functions
     queries.js          the Part 1–3 question bank (MySQL answer + live SQLite)
+    ai.js               client for /api/ai (text-to-SQL, summarize) + SELECT guard
   pages/                Overview · Validator · SqlWorkbench
   components/ResultTable.jsx
+api/
+  handler.js            shared AI handler — Anthropic SDK, key kept server-side
+  ai.js                 Vercel serverless entry (POST /api/ai)
 ```
 
 ## Notes on the SQL
