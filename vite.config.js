@@ -7,7 +7,8 @@ import react from '@vitejs/plugin-react'
 // so a key in those files is picked up without exporting it manually.
 function aiDevApi(mode) {
   const env = loadEnv(mode, process.cwd(), '')
-  for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_MODEL', 'ANTHROPIC_BASE_URL']) {
+  for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_MODEL', 'ANTHROPIC_BASE_URL',
+    'GROQ_API_KEY', 'AI_API_KEY', 'AI_BASE_URL', 'AI_MODEL']) {
     if (env[k] && !process.env[k]) process.env[k] = env[k]
   }
   return {
