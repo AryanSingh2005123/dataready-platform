@@ -413,41 +413,40 @@ export default function Validator() {
           )}
 
           {showMapping ? (
-            <>
-              <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))' }}>
-                {ROLES.map((role) => (
-                  <div key={role.key}>
-                    <label className="field" title={role.hint}>{role.label}</label>
-                    <select value={mapping[role.key] || ''} onChange={(e) => setMapping({ ...mapping, [role.key]: e.target.value || undefined })}>
-                      <option value="">— none —</option>
-                      {columnsForRole(role.key, headers, rows, mapping[role.key]).map((h) => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 16 }}>
-                <label className="field">Required fields <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· blank values in these columns are flagged</span></label>
-                <div className="chiprow">
-                  {ROLES.filter((r) => mapping[r.key]).map((r) => {
-                    const on = required.includes(r.key)
-                    return (
-                      <button key={r.key} className="chip" style={{ cursor: 'pointer', borderColor: on ? 'var(--brand)' : 'var(--line)', color: on ? 'var(--brand-ink)' : 'var(--muted)', background: on ? 'var(--brand-soft)' : '#faf9ff' }}
-                        onClick={() => setRequired(on ? required.filter((x) => x !== r.key) : [...required, r.key])}>
-                        {on ? <Check size={12} /> : <X size={12} style={{ opacity: .4 }} />} {r.label}
-                      </button>
-                    )
-                  })}
+            <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))' }}>
+              {ROLES.map((role) => (
+                <div key={role.key}>
+                  <label className="field" title={role.hint}>{role.label}</label>
+                  <select value={mapping[role.key] || ''} onChange={(e) => setMapping({ ...mapping, [role.key]: e.target.value || undefined })}>
+                    <option value="">— none —</option>
+                    {columnsForRole(role.key, headers, rows, mapping[role.key]).map((h) => <option key={h} value={h}>{h}</option>)}
+                  </select>
                 </div>
-              </div>
-            </>
+              ))}
+            </div>
           ) : (
             <div className="chiprow">
               {ROLES.filter((r) => mapping[r.key]).map((r) => (
-                <span key={r.key} className="chip"><strong>{r.label}</strong>&nbsp;= {mapping[r.key]}{required.includes(r.key) ? ' *' : ''}</span>
+                <span key={r.key} className="chip"><strong>{r.label}</strong>&nbsp;= {mapping[r.key]}</span>
               ))}
-              {ROLES.filter((r) => mapping[r.key]).length === 0
-                ? <span className="muted" style={{ fontSize: 13 }}>No columns mapped — click “Edit columns”.</span>
-                : <span className="muted" style={{ fontSize: 12, alignSelf: 'center' }}>* required</span>}
+              {ROLES.filter((r) => mapping[r.key]).length === 0 && <span className="muted" style={{ fontSize: 13 }}>No columns mapped — click “Edit columns”.</span>}
+            </div>
+          )}
+
+          {ROLES.filter((r) => mapping[r.key]).length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <label className="field">Required fields <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· click to require — blank values in required columns are flagged</span></label>
+              <div className="chiprow">
+                {ROLES.filter((r) => mapping[r.key]).map((r) => {
+                  const on = required.includes(r.key)
+                  return (
+                    <button key={r.key} className="chip" style={{ cursor: 'pointer', borderColor: on ? 'var(--brand)' : 'var(--line)', color: on ? 'var(--brand-ink)' : 'var(--muted)', background: on ? 'var(--brand-soft)' : '#faf9ff' }}
+                      onClick={() => setRequired(on ? required.filter((x) => x !== r.key) : [...required, r.key])}>
+                      {on ? <Check size={12} /> : <X size={12} style={{ opacity: .4 }} />} {r.label}{on ? ' · required' : ' · optional'}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 
