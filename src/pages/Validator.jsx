@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import {
-  UploadCloud, FileSpreadsheet, Play, Download, Scissors,
+  UploadCloud, FileSpreadsheet, Play, Download, Scissors, Check,
   Phone, CalendarClock, X, Plus, RotateCcw, AlertTriangle, Sparkles, Loader2, Gauge,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
@@ -336,6 +336,21 @@ export default function Validator() {
                 </select>
               </div>
             ))}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <label className="field">Required fields <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· blank values in these columns are flagged</span></label>
+            <div className="chiprow">
+              {ROLES.filter((r) => mapping[r.key]).map((r) => {
+                const on = required.includes(r.key)
+                return (
+                  <button key={r.key} className="chip" style={{ cursor: 'pointer', borderColor: on ? 'var(--brand)' : 'var(--line)', color: on ? 'var(--brand-ink)' : 'var(--muted)', background: on ? 'var(--brand-soft)' : '#faf9ff' }}
+                    onClick={() => setRequired(on ? required.filter((x) => x !== r.key) : [...required, r.key])}>
+                    {on ? <Check size={12} /> : <X size={12} style={{ opacity: .4 }} />} {r.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className="row" style={{ marginTop: 16, alignItems: 'flex-end' }}>
