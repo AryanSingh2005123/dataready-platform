@@ -86,15 +86,15 @@ async function textToSql(cfg, question) {
   return JSON.parse(await complete(cfg, { system, user: question, schema }))
 }
 
-const MAP_ROLES = ['id', 'phone', 'date', 'email']
+const MAP_ROLES = ['id', 'name', 'phone', 'date', 'email']
 
 // CSV headers + sample rows → best-guess mapping of each role to a column name.
 // Built for messy / non-English / unconventional headers where regex detection fails.
 async function mapColumns(cfg, { headers, sample }) {
   const system =
     `You map columns of a CSV to logical roles for a data validator. Roles:\n` +
-    `  id = record/order identifier; phone = phone number; date = date or datetime;\n` +
-    `  email = email address.\n` +
+    `  id = record/order identifier; name = person/full name; phone = phone number;\n` +
+    `  date = date or datetime; email = email address.\n` +
     `Given the column headers and a few sample rows (which may be in any language), return a JSON object whose keys are ` +
     `exactly: ${MAP_ROLES.join(', ')}. Each value MUST be one of the provided header strings verbatim, or an empty ` +
     `string if no column fits. Use the sample values to disambiguate. Return JSON only.`

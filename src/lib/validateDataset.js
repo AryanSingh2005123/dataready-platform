@@ -1,6 +1,6 @@
 // Orchestrates validation of a whole transaction dataset, field by field, row by
 // row. The platform is schema-flexible: it auto-detects which columns are id /
-// phone / date / email, and the user can override the mapping.
+// name / phone / date / email, and the user can override the mapping.
 
 import { validatePhone } from './countryRules.js'
 import { validateDateTime } from './dateRules.js'
@@ -8,6 +8,7 @@ import { validateDateTime } from './dateRules.js'
 // Logical field roles the validator understands. Order is the display order.
 export const ROLES = [
   { key: 'id', label: 'Order / ID', hint: 'unique identifier; duplicates are flagged' },
+  { key: 'name', label: 'Name', hint: 'full name; must contain letters' },
   { key: 'phone', label: 'Phone', hint: 'validated against country rules' },
   { key: 'date', label: 'Date / time', hint: 'validated against accepted formats' },
   { key: 'email', label: 'Email', hint: 'basic RFC-ish format check' },
@@ -15,6 +16,7 @@ export const ROLES = [
 
 const HEADER_HINTS = {
   id: [/order.*id/i, /(?:^|[_\s])id\b/i, /_id\b/i, /txn/i, /transaction.*id/i, /invoice/i],
+  name: [/name/i, /full.?name/i, /customer.?name/i, /\bfname\b/i],
   phone: [/phone/i, /mobile/i, /contact/i, /\bmsisdn\b/i, /\btel\b/i],
   date: [/date/i, /time/i, /\bts\b/i, /timestamp/i, /created/i],
   email: [/email/i, /e-mail/i, /\bmail\b/i],
@@ -39,6 +41,7 @@ export function columnsForRole(role, headers, rows, current) {
     if (role === 'email') return frac(h, (v) => EMAILish.test(v)) >= 0.5
     if (role === 'phone') return frac(h, (v) => PHONEish.test(v) && !DATEish.test(v) && v.replace(/\D/g, '').length <= 15) >= 0.5
     if (role === 'date') return frac(h, (v) => DATEish.test(v)) >= 0.5
+    if (role === 'name') return frac(h, (v) => /^[A-Za-z][A-Za-z .'-]*$/.test(v)) >= 0.5
     return false // id: rely on header hints only (values are too ambiguous)
   }
   let cols = headers.filter(matches)
@@ -77,6 +80,15 @@ function validateRow(row, cfg) {
     const col = mapping[role]
     if (col && !String(row[col] ?? '').trim()) {
       errors.push({ field: col, message: `${role} is required but empty` })
+    }
+  }
+
+  if (mapping.name) {
+    const col = mapping.name
+    const v = String(row[col] ?? '').trim()
+    if (v) {
+      if (!/[A-Za-z]/.test(v)) errors.push({ field: col, message: `name has no letters` })
+      else cleaned[col] = v.replace(/\s+/g, ' ')
     }
   }
 
