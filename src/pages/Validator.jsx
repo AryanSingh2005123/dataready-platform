@@ -127,7 +127,7 @@ function AiSummary({ report }) {
   )
 }
 
-const REQUIRED_DEFAULT = ['id', 'phone', 'date']
+const REQUIRED_DEFAULT = ['id', 'phone', 'date', 'email']
 
 // ---- small editable-list helpers ----
 function ChipList({ items, onRemove, onAdd, placeholder }) {
@@ -277,9 +277,11 @@ export default function Validator() {
   const [loadError, setLoadError] = useState(null)
 
   function loadData(parsedRows, parsedHeaders, name) {
+    const m = autoDetectMapping(parsedHeaders)
     setRows(parsedRows)
     setHeaders(parsedHeaders)
-    setMapping(autoDetectMapping(parsedHeaders))
+    setMapping(m)
+    setRequired(Object.keys(m)) // every detected field required by default — empty cells are flagged
     setReport(null)
     setFileName(name)
   }
@@ -328,6 +330,7 @@ export default function Validator() {
     try {
       const { mapping: m } = await mapColumnsAi(headers, rows.slice(0, 5))
       setMapping(m)
+      setRequired(Object.keys(m))
       const hits = Object.keys(m).length
       setMapMsg({ ok: true, text: `AI mapped ${hits} of ${ROLES.length} role${hits === 1 ? '' : 's'}.` })
     } catch (e) {
