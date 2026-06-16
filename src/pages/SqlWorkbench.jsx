@@ -75,13 +75,13 @@ function Chart({ result, cfg }) {
         <BarChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>
           <defs>
             <linearGradient id="gSqlBar" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6aa3ff" /><stop offset="100%" stopColor="#2f6fe0" />
+              <stop offset="0%" stopColor="#a99af2" /><stop offset="100%" stopColor="#8b7cf0" />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,.1)" vertical={false} />
-          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#8a97af' }} interval={0} angle={data.length > 6 ? -25 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 50 : 24} />
-          <YAxis tick={{ fontSize: 11, fill: '#8a97af' }} allowDecimals={false} />
-          <Tooltip cursor={{ fill: 'rgba(59,130,246,.12)' }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(56,52,63,.08)" vertical={false} />
+          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#8b8794' }} interval={0} angle={data.length > 6 ? -25 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 50 : 24} />
+          <YAxis tick={{ fontSize: 11, fill: '#8b8794' }} allowDecimals={false} />
+          <Tooltip cursor={{ fill: 'rgba(139,124,240,.1)' }} />
           <Bar dataKey="value" fill="url(#gSqlBar)" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

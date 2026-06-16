@@ -27,7 +27,7 @@ function ResultCharts({ report }) {
   const issues = Object.entries(report.issueCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([k, v]) => ({ name: k.length > 26 ? k.slice(0, 26) + '…' : k, value: v }))
-  const centerColor = passRate >= 80 ? '#5cc79b' : passRate >= 50 ? '#d6a85b' : '#e08293'
+  const centerColor = passRate >= 80 ? '#5aa882' : passRate >= 50 ? '#c79a52' : '#d27d8f'
 
   return (
     <div className="panel pad" style={{ marginBottom: 16 }}>
@@ -38,10 +38,10 @@ function ResultCharts({ report }) {
             <PieChart>
               <defs>
                 <linearGradient id="gValid" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#62c79c" /><stop offset="100%" stopColor="#3f9e78" />
+                  <stop offset="0%" stopColor="#7cc4a0" /><stop offset="100%" stopColor="#4f9b78" />
                 </linearGradient>
                 <linearGradient id="gIssue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#e493a1" /><stop offset="100%" stopColor="#bf6072" />
+                  <stop offset="0%" stopColor="#b3a3ec" /><stop offset="100%" stopColor="#8b7cf0" />
                 </linearGradient>
               </defs>
               <Pie data={passData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={82} paddingAngle={2} stroke="none">
@@ -63,13 +63,13 @@ function ResultCharts({ report }) {
               <BarChart data={issues} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
                 <defs>
                   <linearGradient id="gIssueBar" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#b65b6c" /><stop offset="100%" stopColor="#e08a9b" />
+                    <stop offset="0%" stopColor="#7c6ce0" /><stop offset="100%" stopColor="#b6a6ee" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid horizontal={false} stroke="rgba(148,163,184,.1)" />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8a97af' }} />
-                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#8a97af' }} />
-                <Tooltip cursor={{ fill: 'rgba(224,130,147,.1)' }} />
+                <CartesianGrid horizontal={false} stroke="rgba(56,52,63,.08)" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8b8794' }} />
+                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#8b8794' }} />
+                <Tooltip cursor={{ fill: 'rgba(139,124,240,.1)' }} />
                 <Bar dataKey="value" fill="url(#gIssueBar)" radius={[0, 6, 6, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
