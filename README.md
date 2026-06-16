@@ -24,10 +24,13 @@ Two places call **Claude** (`claude-opus-4-8` via the official Anthropic SDK)
 through a small serverless function at `/api/ai`, so the API key stays
 server-side and never reaches the browser:
 
-- **SQL Workbench → "Ask in plain English"** — type a question, Claude writes a
-  read-only SQLite query (guarded client-side to SELECT-only), and it runs live
+- **SQL Workbench → "Ask in plain English"** — type a question, the model writes
+  a read-only SQLite query (guarded client-side to SELECT-only), and it runs live
   against the sample data.
-- **Validator → "Explain & fix"** — Claude turns the validation report into a
+- **Validator → "Auto-map with AI"** — maps messy / non-English / unconventional
+  CSV headers to the validator's roles from the headers + a few sample rows
+  (e.g. German `Bestell-Nr → id`, `Zahlungsart → payment`).
+- **Validator → "Explain & fix"** — turns the validation report into a
   plain-English data-quality briefing with a prioritized fix list.
 
 **No key? The app still works fully** — those two buttons just show a "not

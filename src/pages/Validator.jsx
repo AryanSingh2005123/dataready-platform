@@ -8,7 +8,7 @@ import { defaultDateFormats } from '../lib/dateRules.js'
 import { ROLES, autoDetectMapping, validateDataset, defaultPaymentModes } from '../lib/validateDataset.js'
 import { parseCsvFile, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
 import { buildTransactions, transactionColumns } from '../lib/sampleData.js'
-import { summarizeReport } from '../lib/ai.js'
+import { summarizeReport, mapColumnsAi } from '../lib/ai.js'
 
 // AI: turn the validation report into a plain-English briefing + prioritized fixes.
 function AiSummary({ report }) {
@@ -116,6 +116,8 @@ export default function Validator() {
   const [chunkSize, setChunkSize] = useState(5)
   const [report, setReport] = useState(null)
   const [showConfig, setShowConfig] = useState(false)
+  const [mapBusy, setMapBusy] = useState(false)
+  const [mapMsg, setMapMsg] = useState(null)
 
   function loadData(parsedRows, parsedHeaders, name) {
     setRows(parsedRows)
@@ -138,6 +140,21 @@ export default function Validator() {
   function runValidation() {
     const cfg = { mapping, rules, defaultCountry, formats, paymentModes, requiredRoles: required }
     setReport(validateDataset(rows, headers, cfg))
+  }
+
+  // AI column mapping — useful for messy / non-English / unconventional headers.
+  async function aiMap() {
+    setMapBusy(true); setMapMsg(null)
+    try {
+      const { mapping: m } = await mapColumnsAi(headers, rows.slice(0, 5))
+      setMapping(m)
+      const hits = Object.keys(m).length
+      setMapMsg({ ok: true, text: `AI mapped ${hits} of ${ROLES.length} role${hits === 1 ? '' : 's'}.` })
+    } catch (e) {
+      setMapMsg({ ok: false, text: String(e.message || e) })
+    } finally {
+      setMapBusy(false)
+    }
   }
 
   const cleanedRows = useMemo(() => (report ? report.results.filter((r) => r.valid).map((r) => r.cleaned) : []), [report])
@@ -192,7 +209,17 @@ export default function Validator() {
 
           {/* ---- column mapping ---- */}
           <hr className="divider" />
-          <h3>Column mapping <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>· auto-detected, editable</span></h3>
+          <div className="row" style={{ alignItems: 'center', marginBottom: 10 }}>
+            <h3 style={{ margin: 0 }}>Column mapping <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>· auto-detected, editable</span></h3>
+            <button className="btn" style={{ marginLeft: 'auto', borderColor: 'var(--brand)', color: 'var(--brand-ink)' }} onClick={aiMap} disabled={mapBusy}>
+              {mapBusy ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />} Auto-map with AI
+            </button>
+          </div>
+          {mapMsg && (
+            <p className={mapMsg.ok ? 'muted' : ''} style={{ fontSize: 13, margin: '0 0 10px', color: mapMsg.ok ? undefined : 'var(--bad)' }}>
+              {mapMsg.text}
+            </p>
+          )}
           <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))' }}>
             {ROLES.map((role) => (
               <div key={role.key}>

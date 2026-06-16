@@ -26,6 +26,11 @@ export function summarizeReport(report) {
   return callAi({ action: 'summarize', report })
 }
 
+// Headers + sample rows → { mapping: { role: columnName } }.
+export function mapColumnsAi(headers, sample) {
+  return callAi({ action: 'map_columns', headers, sample })
+}
+
 // Guard: only allow a single read-only SELECT/WITH to run against the in-browser DB.
 export function isSafeSelect(sql) {
   const s = String(sql || '').trim().replace(/;+\s*$/, '')

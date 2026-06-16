@@ -37,26 +37,15 @@ function provider() {
 }
 
 // One completion call across providers. Returns the raw text response.
-//   json=true asks the provider to return a strict JSON object.
-async function complete(cfg, { system, user, json }) {
+//   schema (optional) constrains the output to a strict JSON object — used as a
+//   json_schema on Anthropic and as json_object mode on OpenAI-compatible APIs.
+async function complete(cfg, { system, user, schema }) {
   if (cfg.kind === 'anthropic') {
     const opts = { apiKey: process.env.ANTHROPIC_API_KEY }
     if (cfg.baseURL) opts.baseURL = cfg.baseURL
     const anthropic = new Anthropic(opts)
     const req = { model: cfg.model, max_tokens: 1024, system, messages: [{ role: 'user', content: user }] }
-    if (json) {
-      req.output_config = {
-        format: {
-          type: 'json_schema',
-          schema: {
-            type: 'object',
-            properties: { sql: { type: 'string' }, explanation: { type: 'string' } },
-            required: ['sql', 'explanation'],
-            additionalProperties: false,
-          },
-        },
-      }
-    }
+    if (schema) req.output_config = { format: { type: 'json_schema', schema } }
     const res = await anthropic.messages.create(req)
     return res.content.find((b) => b.type === 'text')?.text || ''
   }
@@ -67,7 +56,7 @@ async function complete(cfg, { system, user, json }) {
     max_tokens: 1024,
     messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
   }
-  if (json) body.response_format = { type: 'json_object' }
+  if (schema) body.response_format = { type: 'json_object' }
   const r = await fetch(`${cfg.baseURL.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${cfg.key}` },
@@ -88,8 +77,41 @@ async function textToSql(cfg, question) {
     `Return a JSON object with exactly two string keys: "sql" and "explanation". ` +
     `"sql" must be a single SELECT (or WITH ... SELECT) statement only — never INSERT/UPDATE/DELETE/DROP/PRAGMA/ATTACH, ` +
     `no trailing semicolon, with clear column aliases. "explanation" is one sentence on what it does.`
-  const text = await complete(cfg, { system, user: question, json: true })
-  return JSON.parse(text)
+  const schema = {
+    type: 'object',
+    properties: { sql: { type: 'string' }, explanation: { type: 'string' } },
+    required: ['sql', 'explanation'],
+    additionalProperties: false,
+  }
+  return JSON.parse(await complete(cfg, { system, user: question, schema }))
+}
+
+const MAP_ROLES = ['id', 'phone', 'date', 'amount', 'email', 'payment']
+
+// CSV headers + sample rows → best-guess mapping of each role to a column name.
+// Built for messy / non-English / unconventional headers where regex detection fails.
+async function mapColumns(cfg, { headers, sample }) {
+  const system =
+    `You map columns of a transaction CSV to logical roles for a data validator. Roles:\n` +
+    `  id = order/transaction identifier; phone = phone number; date = date or datetime;\n` +
+    `  amount = monetary value; email = email address; payment = payment mode/method.\n` +
+    `Given the column headers and a few sample rows (which may be in any language), return a JSON object whose keys are ` +
+    `exactly: ${MAP_ROLES.join(', ')}. Each value MUST be one of the provided header strings verbatim, or an empty ` +
+    `string if no column fits. Use the sample values to disambiguate. Return JSON only.`
+  const schema = {
+    type: 'object',
+    properties: Object.fromEntries(MAP_ROLES.map((r) => [r, { type: 'string' }])),
+    required: MAP_ROLES,
+    additionalProperties: false,
+  }
+  const user = JSON.stringify({ headers, sampleRows: sample })
+  const raw = JSON.parse(await complete(cfg, { system, user, schema }))
+  // Keep only values that are actually one of the headers.
+  const mapping = {}
+  for (const role of MAP_ROLES) {
+    if (headers.includes(raw[role])) mapping[role] = raw[role]
+  }
+  return mapping
 }
 
 // Validation report stats → a short, plain-English data-quality briefing.
@@ -98,10 +120,11 @@ async function summarize(cfg, payload) {
     `You are a data-quality analyst. Given a transaction-file validation summary, write a concise plain-text briefing ` +
     `(no markdown headers) for an operations team: 2-3 sentences on overall health, then a short prioritized list of the ` +
     `most impactful fixes. Be specific and practical; do not invent issues beyond the data given.`
-  return (await complete(cfg, { system, user: JSON.stringify(payload), json: false })).trim()
+  return (await complete(cfg, { system, user: JSON.stringify(payload) })).trim()
 }
 
 // body: { action: 'text_to_sql', question } | { action: 'summarize', report }
+//     | { action: 'map_columns', headers, sample }
 export async function handleAi(body) {
   const cfg = provider()
   if (!cfg) {
@@ -114,6 +137,10 @@ export async function handleAi(body) {
     }
     if (body?.action === 'summarize') {
       return { status: 200, json: { summary: await summarize(cfg, body.report || {}) } }
+    }
+    if (body?.action === 'map_columns') {
+      if (!Array.isArray(body.headers) || !body.headers.length) return { status: 400, json: { error: 'Missing headers.' } }
+      return { status: 200, json: { mapping: await mapColumns(cfg, { headers: body.headers, sample: body.sample || [] }) } }
     }
     return { status: 400, json: { error: 'Unknown action.' } }
   } catch (e) {
