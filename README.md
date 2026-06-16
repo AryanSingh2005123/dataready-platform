@@ -2,7 +2,8 @@
 
 A single web app that covers the whole **Xeno Implementation Internship** brief:
 
-- **Validator (Part 4 — AI Empowerment):** upload a transaction CSV → validate
+- **Validator (Part 4 — AI Empowerment):** upload a transaction **CSV or Excel
+  (.xlsx/.xls)** file (Excel date serials are converted; SheetJS is lazy-loaded) → validate
   phone numbers against **configurable, country-code-driven rules** (Singapore 8
   digits, India 10 digits, …), check dates against **configurable accepted
   formats**, run **integrity checks** (required fields, numeric amounts, email

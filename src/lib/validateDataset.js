@@ -16,7 +16,7 @@ export const ROLES = [
 ]
 
 const HEADER_HINTS = {
-  id: [/order.*id/i, /\bid\b/i, /txn/i, /transaction.*id/i, /invoice/i],
+  id: [/order.*id/i, /(?:^|[_\s])id\b/i, /_id\b/i, /txn/i, /transaction.*id/i, /invoice/i],
   phone: [/phone/i, /mobile/i, /contact/i, /\bmsisdn\b/i, /\btel\b/i],
   date: [/date/i, /time/i, /\bts\b/i, /timestamp/i, /created/i],
   amount: [/amount/i, /price/i, /total/i, /value/i, /\bamt\b/i],

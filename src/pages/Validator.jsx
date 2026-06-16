@@ -8,6 +8,7 @@ import { defaultCountryRules } from '../lib/countryRules.js'
 import { defaultDateFormats } from '../lib/dateRules.js'
 import { ROLES, autoDetectMapping, validateDataset, defaultPaymentModes } from '../lib/validateDataset.js'
 import { parseCsvFile, parseCsvText, downloadCsv, downloadErrorReport, downloadChunkedZip } from '../lib/csv.js'
+import { parseXlsxFile, looksLikeExcel } from '../lib/excel.js'
 import { buildStressTransactions, transactionColumns } from '../lib/sampleData.js'
 import { summarizeReport, mapColumnsAi } from '../lib/ai.js'
 
@@ -177,6 +178,7 @@ export default function Validator() {
   const [mapBusy, setMapBusy] = useState(false)
   const [mapMsg, setMapMsg] = useState(null)
   const [showAll, setShowAll] = useState(false)
+  const [loadError, setLoadError] = useState(null)
 
   function loadData(parsedRows, parsedHeaders, name) {
     setRows(parsedRows)
@@ -188,8 +190,18 @@ export default function Validator() {
 
   async function onFile(file) {
     if (!file) return
-    const { rows: r, headers: h } = await parseCsvFile(file)
-    loadData(r, h, file.name)
+    setLoadError(null)
+    try {
+      const excel = await looksLikeExcel(file)
+      const { rows: r, headers: h } = excel ? await parseXlsxFile(file) : await parseCsvFile(file)
+      if (!h.length || !r.length) {
+        setLoadError('No rows found in that file. Make sure the first row contains column headers.')
+        return
+      }
+      loadData(r, h, file.name)
+    } catch (e) {
+      setLoadError(`Could not read "${file.name}": ${e.message || e}. Supported: CSV and Excel (.xlsx/.xls).`)
+    }
   }
 
   // Load the real CSV artifact shipped in /public.
@@ -253,6 +265,7 @@ export default function Validator() {
 
       {/* ---- input ---- */}
       {rows.length === 0 ? (
+        <>
         <div
           className={`drop ${over ? 'over' : ''}`}
           onClick={() => fileRef.current?.click()}
@@ -261,12 +274,18 @@ export default function Validator() {
           onDrop={(e) => { e.preventDefault(); setOver(false); onFile(e.dataTransfer.files[0]) }}
         >
           <UploadCloud size={34} className="muted" />
-          <h3 style={{ margin: '10px 0 4px' }}>Drop a CSV here, or click to browse</h3>
+          <h3 style={{ margin: '10px 0 4px' }}>Drop a CSV or Excel file here, or click to browse</h3>
           <p className="muted" style={{ margin: 0, fontSize: 14 }}>
-            Headers expected · or <button className="btn ghost" style={{ padding: '2px 6px' }} onClick={(e) => { e.stopPropagation(); loadSample() }}><FileSpreadsheet size={14} /> load the sample</button>
+            .csv, .xlsx or .xls · first row = headers · or <button className="btn ghost" style={{ padding: '2px 6px' }} onClick={(e) => { e.stopPropagation(); loadSample() }}><FileSpreadsheet size={14} /> load the sample</button>
           </p>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => onFile(e.target.files[0])} />
+          <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" hidden onChange={(e) => onFile(e.target.files[0])} />
         </div>
+        {loadError && (
+          <div className="panel pad" style={{ marginTop: 14, borderColor: 'var(--bad)' }}>
+            <span className="pill bad"><AlertTriangle size={13} /> {loadError}</span>
+          </div>
+        )}
+        </>
       ) : (
         <div className="panel pad" style={{ marginBottom: 18 }}>
           <div className="row" style={{ alignItems: 'center' }}>
