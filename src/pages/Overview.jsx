@@ -14,7 +14,7 @@ function Capability({ icon: Icon, title, children }) {
 export default function Overview({ goTo }) {
   return (
     <>
-      <div className="panel pad" style={{ marginBottom: 22 }}>
+      <div className="panel pad hero" style={{ marginBottom: 22 }}>
         <span className="eyebrow">Xeno · Implementation Internship</span>
         <h1 style={{ marginTop: 8 }}>A data-readiness workbench for transaction data</h1>
         <p className="lead" style={{ maxWidth: 720 }}>

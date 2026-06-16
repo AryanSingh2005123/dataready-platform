@@ -253,7 +253,7 @@ export default function Validator() {
 
   return (
     <>
-      <div className="panel pad" style={{ marginBottom: 18 }}>
+      <div className="panel pad hero" style={{ marginBottom: 18 }}>
         <span className="eyebrow">Part 4 · AI Empowerment</span>
         <h1 style={{ marginTop: 8 }}>Transaction Validator</h1>
         <p className="lead" style={{ maxWidth: 760 }}>

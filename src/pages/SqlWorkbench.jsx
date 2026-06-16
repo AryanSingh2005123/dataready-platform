@@ -157,7 +157,7 @@ export default function SqlWorkbench() {
 
   return (
     <>
-      <div className="panel pad" style={{ marginBottom: 18 }}>
+      <div className="panel pad hero" style={{ marginBottom: 18 }}>
         <span className="eyebrow">Parts 1–3 · SQL & Data Familiarity, Transformation, Analytics</span>
         <h1 style={{ marginTop: 8 }}>SQL Workbench</h1>
         <p className="lead" style={{ maxWidth: 760 }}>
