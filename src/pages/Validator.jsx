@@ -51,10 +51,10 @@ function ResultCharts({ report }) {
           {issues.length ? (
             <ResponsiveContainer>
               <BarChart data={issues} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
-                <CartesianGrid horizontal={false} stroke="#eef1f6" />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <Tooltip cursor={{ fill: '#fef2f2' }} />
+                <CartesianGrid horizontal={false} stroke="rgba(148,163,184,.12)" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8a97af' }} />
+                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#8a97af' }} />
+                <Tooltip cursor={{ fill: 'rgba(244,63,94,.14)' }} />
                 <Bar dataKey="value" fill="#dc2626" radius={[0, 5, 5, 0]} />
               </BarChart>
             </ResponsiveContainer>

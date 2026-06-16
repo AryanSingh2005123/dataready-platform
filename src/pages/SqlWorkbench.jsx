@@ -73,10 +73,10 @@ function Chart({ result, cfg }) {
     <div style={{ height: 240, marginTop: 14 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#eef1f6" vertical={false} />
-          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} interval={0} angle={data.length > 6 ? -25 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 50 : 24} />
-          <YAxis tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
-          <Tooltip cursor={{ fill: '#eff6ff' }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,.12)" vertical={false} />
+          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#8a97af' }} interval={0} angle={data.length > 6 ? -25 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 50 : 24} />
+          <YAxis tick={{ fontSize: 11, fill: '#8a97af' }} allowDecimals={false} />
+          <Tooltip cursor={{ fill: 'rgba(59,130,246,.14)' }} />
           <Bar dataKey="value" fill="#2563eb" radius={[5, 5, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
