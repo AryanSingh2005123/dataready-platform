@@ -19,7 +19,7 @@
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* pastel-purple gradient system + neutral accents */
-  --grad-hero: linear-gradient(135deg, #6353c4 0%, #534399 55%, #423785 100%);
+  --grad-hero: linear-gradient(135deg, #ece6fb 0%, #ddd0f8 48%, #ccbbf4 100%);
   --grad-brand: linear-gradient(135deg, #9c8cf4 0%, #8b7cf0 55%, #7464dd 100%);
   --grad-logo: linear-gradient(135deg, #c2b4f6 0%, #8b7cf0 100%);
   --grad-surface: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
@@ -92,25 +92,26 @@ h3 { font-size: 15px; margin: 0 0 8px; color: var(--ink); }
 
 /* Pastel-purple gradient hero — the page header blocks */
 .hero {
-  position: relative; overflow: hidden; border: none; color: #fff;
+  position: relative; overflow: hidden; color: var(--ink);
   background: var(--grad-hero);
-  box-shadow: 0 22px 50px -24px rgba(110, 92, 210, .7);
+  border: 1px solid rgba(139, 124, 240, .3);
+  box-shadow: 0 20px 46px -26px rgba(139, 124, 240, .6);
 }
 .hero::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(130% 150% at 100% 0%, rgba(255, 255, 255, .28), transparent 52%),
-    radial-gradient(90% 130% at 0% 100%, rgba(106, 90, 203, .35), transparent 60%);
+    radial-gradient(130% 150% at 100% 0%, rgba(255, 255, 255, .55), transparent 55%),
+    radial-gradient(90% 130% at 0% 100%, rgba(139, 124, 240, .16), transparent 60%);
 }
 .hero > * { position: relative; z-index: 1; }
-.hero h1, .hero h2, .hero h3 { color: #fff; }
-.hero .lead { color: #f1eefc; }
-.hero .eyebrow { color: #e7e0fb; }
-.hero .muted { color: #ece8f8; }
-.hero code { background: rgba(255, 255, 255, .2); color: #fff; padding: 1px 6px; border-radius: 6px; }
-.hero ol.muted, .hero ol.muted li { color: #f1eefc; }
-.hero .btn:not(.primary) { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .35); color: #fff; }
-.hero .btn:not(.primary):hover { background: rgba(255, 255, 255, .26); border-color: rgba(255, 255, 255, .5); }
+.hero h1, .hero h2, .hero h3 { color: #2b2250; }
+.hero .lead { color: #494163; }
+.hero .eyebrow { color: #5b4bbf; }
+.hero .muted { color: #5a5370; }
+.hero code { background: rgba(139, 124, 240, .16); color: #3a2f6b; padding: 1px 6px; border-radius: 6px; }
+.hero ol.muted, .hero ol.muted li { color: #494163; }
+.hero .btn:not(.primary) { background: rgba(255, 255, 255, .68); border-color: rgba(111, 95, 214, .32); color: var(--brand-ink); }
+.hero .btn:not(.primary):hover { background: rgba(255, 255, 255, .92); border-color: var(--brand); }
 
 .btn {
   border: 1px solid var(--line-strong); background: #fff; color: var(--ink);
