@@ -1,0 +1,5 @@
+# Local tooling / artifacts that shouldn't be uploaded to the deployment
+scripts
+*.pdf
+.claude
+.env.local
