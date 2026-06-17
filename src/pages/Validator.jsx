@@ -359,9 +359,9 @@ export default function Validator() {
         <span className="eyebrow">Part 4 · AI Empowerment</span>
         <h1 style={{ marginTop: 8 }}>Transaction Validator</h1>
         <p className="lead" style={{ maxWidth: 760 }}>
-          Upload a transaction dataset (order, product and payment fields). The platform validates phone numbers
-          against configurable country rules, checks dates against accepted formats, runs integrity checks, then
-          lets you download a cleaned file and split large files into chunks.
+          Upload a CSV or Excel file. The platform validates phone numbers against configurable country
+          rules, checks dates against accepted formats, runs integrity checks (required fields, email, name,
+          duplicate IDs), then lets you download a cleaned file and split large files into chunks.
         </p>
       </div>
 
