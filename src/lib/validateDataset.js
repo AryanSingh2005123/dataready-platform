@@ -146,7 +146,7 @@ export function validateDataset(rows, headers, cfg) {
   const issueCounts = {}
   for (const r of results) {
     for (const e of r.errors) {
-      const kind = e.message.split('—')[0].trim().replace(/"[^"]*"/g, '…')
+      const kind = e.message.split('—')[0].trim().replace(/"[^"]*"/g, '').replace(/\s*\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim()
       issueCounts[kind] = (issueCounts[kind] || 0) + 1
     }
   }

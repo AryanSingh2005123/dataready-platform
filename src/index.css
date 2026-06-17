@@ -2,7 +2,7 @@
   --bg: #f6f4fb;
   --panel: #ffffff;
   --ink: #38343f;
-  --muted: #8b8794;
+  --muted: #6f6b7a;
   --line: #ece8f4;
   --line-strong: #ddd6ec;
   --brand: #8b7cf0;
@@ -19,7 +19,7 @@
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* pastel-purple gradient system + neutral accents */
-  --grad-hero: linear-gradient(135deg, #b4a6ef 0%, #8b7cf0 52%, #6a5acb 100%);
+  --grad-hero: linear-gradient(135deg, #6353c4 0%, #534399 55%, #423785 100%);
   --grad-brand: linear-gradient(135deg, #9c8cf4 0%, #8b7cf0 55%, #7464dd 100%);
   --grad-logo: linear-gradient(135deg, #c2b4f6 0%, #8b7cf0 100%);
   --grad-surface: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);

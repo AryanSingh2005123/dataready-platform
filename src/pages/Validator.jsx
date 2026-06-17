@@ -26,7 +26,7 @@ function ResultCharts({ report }) {
   ]
   const issues = Object.entries(report.issueCounts)
     .sort((a, b) => b[1] - a[1])
-    .map(([k, v]) => ({ name: k.length > 26 ? k.slice(0, 26) + '…' : k, value: v }))
+    .map(([k, v]) => ({ name: k.length > 34 ? k.slice(0, 34) + '…' : k, value: v }))
   const centerColor = passRate >= 80 ? '#5aa882' : passRate >= 50 ? '#c79a52' : '#d27d8f'
 
   return (
@@ -67,8 +67,8 @@ function ResultCharts({ report }) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid horizontal={false} stroke="rgba(56,52,63,.08)" />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8b8794' }} />
-                <YAxis type="category" dataKey="name" width={160} tick={{ fontSize: 11, fill: '#8b8794' }} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#6f6b7a' }} />
+                <YAxis type="category" dataKey="name" width={190} tick={{ fontSize: 11, fill: '#6f6b7a' }} />
                 <Tooltip cursor={{ fill: 'rgba(139,124,240,.1)' }} />
                 <Bar dataKey="value" fill="url(#gIssueBar)" radius={[0, 6, 6, 0]} barSize={16} />
               </BarChart>
@@ -501,7 +501,7 @@ export default function Validator() {
             <div className="stat good"><div className="n">{report.validCount.toLocaleString()}</div><div className="k">Valid</div></div>
             <div className="stat bad"><div className="n">{report.invalidCount.toLocaleString()}</div><div className="k">With issues</div></div>
             <div className="stat"><div className="n">{report.total ? Math.round((report.validCount / report.total) * 100) : 0}%</div><div className="k">Pass rate</div></div>
-            <div className="stat"><div className="n">{report.ms}<span style={{ fontSize: 14 }}>ms</span></div><div className="k">Validated in</div></div>
+            <div className="stat"><div className="n">{report.ms < 1 ? '<1' : report.ms}<span style={{ fontSize: 14 }}>ms</span></div><div className="k">Validated in</div></div>
           </div>
 
           <ResultCharts report={report} />
