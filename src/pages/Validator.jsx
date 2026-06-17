@@ -215,7 +215,7 @@ function RecordChecker({ mapping, rows, rules, defaultCountry, formats, required
         <h2 style={{ margin: 0 }}>Check a record</h2>
         {anyEntered && (
           <span className={`pill ${result.valid ? 'good' : 'bad'}`} style={{ marginLeft: 'auto' }}>
-            {result.valid ? <><Check size={13} /> Valid record</> : <><AlertTriangle size={13} /> Invalid</>}
+            {result.valid ? <><Check size={13} /> Validated</> : <><AlertTriangle size={13} /> Not validated</>}
           </span>
         )}
       </div>
@@ -237,12 +237,14 @@ function RecordChecker({ mapping, rows, rules, defaultCountry, formats, required
                 <input type="text" value={v} placeholder={r.key === 'id' ? 'enter id…' : ''}
                   onChange={(e) => { setVals({ ...vals, [r.key]: e.target.value }); setNotFound(false) }}
                   onKeyDown={(e) => { if (r.key === 'id' && e.key === 'Enter') lookup() }}
-                  style={{ paddingRight: r.key === 'id' ? 38 : 10, borderColor: touched ? (err ? 'var(--bad)' : 'var(--good)') : undefined }} />
+                  style={{ paddingRight: r.key === 'id' ? 38 : 10, borderColor: err ? 'var(--bad)' : touched ? 'var(--good)' : undefined }} />
                 {r.key === 'id' && <button className="btn ghost" title="Find in file" style={{ position: 'absolute', right: 4, top: 4, padding: '4px 7px' }} onClick={lookup}><Search size={13} /></button>}
               </div>
-              {touched && (err
-                ? <p style={{ color: 'var(--bad)', fontSize: 12, margin: '5px 2px 0' }}><AlertTriangle size={11} style={{ verticalAlign: '-1px' }} /> {err}</p>
-                : <p style={{ color: 'var(--good)', fontSize: 12, margin: '5px 2px 0' }}><Check size={11} style={{ verticalAlign: '-1px' }} /> valid{normalised ? ` → ${normalised}` : ''}</p>)}
+              {err
+                ? <p style={{ color: 'var(--bad)', fontSize: 12, margin: '5px 2px 0' }}><AlertTriangle size={11} style={{ verticalAlign: '-1px' }} /> {touched ? err : 'missing — required'}</p>
+                : touched
+                  ? <p style={{ color: 'var(--good)', fontSize: 12, margin: '5px 2px 0' }}><Check size={11} style={{ verticalAlign: '-1px' }} /> valid{normalised ? ` → ${normalised}` : ''}</p>
+                  : <p className="muted" style={{ fontSize: 12, margin: '5px 2px 0' }}>optional · empty</p>}
             </div>
           )
         })}
