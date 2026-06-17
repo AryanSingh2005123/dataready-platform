@@ -21,7 +21,7 @@ function aiDevApi(mode) {
         req.on('end', async () => {
           let body = {}
           try { body = JSON.parse(raw || '{}') } catch {}
-          const { handleAi } = await server.ssrLoadModule('/api/handler.js')
+          const { handleAi } = await server.ssrLoadModule('/api/_handler.js')
           const { status, json } = await handleAi(body)
           res.statusCode = status
           res.setHeader('content-type', 'application/json')

@@ -1,7 +1,7 @@
 // Vercel serverless function: POST /api/ai
 // Thin adapter around the shared handler so the same logic runs in dev (Vite
 // middleware) and in production (Vercel). The API key lives only in server env.
-import { handleAi } from './handler.js'
+import { handleAi } from './_handler.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
